@@ -1,6 +1,14 @@
-# Vue 3 + TypeScript + Vite
+# Woordle - A Wordle Clone
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+An attempt to remake Wordle game that has taken the Internet by storm.
+
+**Note:** This is for educational purpose only and doesn't replicate 100% of the original. 
+
+**All rights goes to original creater of Wordle.**
+
+## Built With
+
+- [Vue.js](https://vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) + [Bootstrap](https://getbootstrap.com/) (CDN)
 
 ## Recommended IDE Setup
 

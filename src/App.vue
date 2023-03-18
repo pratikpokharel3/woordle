@@ -207,9 +207,9 @@ function displayResult() {
 
   <nav class="navbar">
     <div class="container">
-      <div href="#" class="navbar-brand fw-bold">Woordle</div>
+      <div class="navbar-brand fw-bold">Woordle</div>
 
-      <a href="https://github.com/pratikpokharel3/coingram" target="_blank">
+      <a href="https://github.com/pratikpokharel3/woordle" target="_blank">
         <svg
           class="github_svg"
           viewBox="0 0 24 24"

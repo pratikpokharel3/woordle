@@ -144,7 +144,7 @@ function compareLetters() {
 
   //Check if the number of attempts is greater than 5
   if (boardRowIdx === 4) {
-    calculateResult();
+    displayResult();
     return;
   }
 
@@ -154,14 +154,6 @@ function compareLetters() {
   a = [];
   b = [];
   w = [];
-}
-
-function calculateResult() {
-  if (hasUserWon) {
-    displayResult();
-  } else {
-    displayResult();
-  }
 }
 
 function displayResult() {
@@ -180,7 +172,7 @@ function displayResult() {
       message = "WOW! You finally got it at the end, congrats!!!";
     }
   } else {
-    message = "YOU LOST! Do you even know how to play this game!!!";
+    message = "YOU LOST! Do you even know how to play this game!!!\nWord of the Day: " + wordOfTheDay;
   }
 
   setTimeout(() => {
@@ -262,23 +254,6 @@ function displayResult() {
       </div>
 
       <div class="col-12 col-lg-8 col-xl-7 mt-3 keyboard">
-        <div class="keypad" @click="getLetter('CLEAR')">
-          <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            style="width: 20px; height: 20px"
-          >
-            <title>close</title>
-            <path
-              d="M5,15.59L6.41,17L10,13.41L13.59,17L15,15.59L11.41,12L15,8.41L13.59,7L10,10.59L6.41,7L5,8.41L8.59,12L5,15.59M2,3A2,2 0 0,0 0,5V19A2,2 0 0,0 2,21H17C17.69,21 18.23,20.64 18.59,20.11L24,12L18.59,3.88C18.23,3.35 17.69,3 17,3H2M2,5H17L21.72,12L17,19H2V5Z"
-            />
-          </svg>
-        </div>
-
-        <div class="keypad" v-for="i in keypads[2]" @click="getLetter(i)">
-          {{ i }}
-        </div>
-
         <div class="keypad" @click="getLetter('ENTER')">
           <svg
             viewBox="0 0 24 24"
@@ -288,6 +263,23 @@ function displayResult() {
             <title>Enter</title>
             <path
               d="M20 4V10.5C20 14.09 17.09 17 13.5 17H7.83L10.92 20.09L9.5 21.5L4 16L9.5 10.5L10.91 11.91L7.83 15H13.5C16 15 18 13 18 10.5V4H20Z"
+            />
+          </svg>
+        </div>
+
+        <div class="keypad" v-for="i in keypads[2]" @click="getLetter(i)">
+          {{ i }}
+        </div>
+
+        <div class="keypad" @click="getLetter('CLEAR')">
+          <svg
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="width: 20px; height: 20px"
+          >
+            <title>close</title>
+            <path
+              d="M5,15.59L6.41,17L10,13.41L13.59,17L15,15.59L11.41,12L15,8.41L13.59,7L10,10.59L6.41,7L5,8.41L8.59,12L5,15.59M2,3A2,2 0 0,0 0,5V19A2,2 0 0,0 2,21H17C17.69,21 18.23,20.64 18.59,20.11L24,12L18.59,3.88C18.23,3.35 17.69,3 17,3H2M2,5H17L21.72,12L17,19H2V5Z"
             />
           </svg>
         </div>

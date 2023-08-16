@@ -1,32 +1,35 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { Board } from "./interfaces";
 import { answers } from "./words";
 
-interface Board {
-  value: string;
-  state: number;
-}
+import Appbar from "./Appbar.vue";
+import Keyboard from "./Keyboard.vue";
 
-const boardArr = ref(new Array(5));
+const board = ref<Board[][]>([]);
+let keypadWords = ref<Board[]>([]);
 const shakeTileState = ref(false);
 
 let enteredWord: string[] = [];
 let boardRowIdx = 0;
 let boardColIdx = 0;
-let a: number[] = [];
-let b: number[] = [];
-let w: string[] = [];
 let hasUserWon = false;
 let wordOfTheDay = "";
 
 const keypads = [
   "QWERTYUIOP".split(""),
   "ASDFGHJKL".split(""),
-  "ZXCVBNM".split("")
+  "ZXCVBNM".split(""),
 ];
 
-setWordOfTheDay();
+function initializeBoard() {
+  board.value = Array.from({ length: 5 }, () =>
+    Array.from({ length: 5 }, () => ({ letter: "", state: -1 }))
+  );
+}
+
 initializeBoard();
+setWordOfTheDay();
 
 function setWordOfTheDay() {
   const idx = Math.floor(Math.random() * answers.length);
@@ -34,19 +37,6 @@ function setWordOfTheDay() {
 
   if (import.meta.env.DEV) {
     console.log(wordOfTheDay);
-  }
-}
-
-function initializeBoard() {
-  for (let i = 0; i < 5; i++) {
-    boardArr.value[i] = new Array<Board>(5);
-
-    for (let j = 0; j < 5; j++) {
-      boardArr.value[i][j] = {
-        value: "",
-        state: -1
-      };
-    }
   }
 }
 
@@ -65,7 +55,7 @@ function addLetterToBoard(letter: string) {
     return;
   }
 
-  boardArr.value[boardRowIdx][boardColIdx].value = letter;
+  board.value[boardRowIdx][boardColIdx].letter = letter;
   boardColIdx++;
   enteredWord.push(letter);
 }
@@ -76,8 +66,23 @@ function removeLetterFromBoard() {
   }
 
   boardColIdx--;
-  boardArr.value[boardRowIdx][boardColIdx].value = "";
+  board.value[boardRowIdx][boardColIdx].letter = "";
   enteredWord.pop();
+}
+
+function handleKeypadsWords(letter: string, state: number) {
+  const idx = keypadWords.value.findIndex((val) => val.letter === letter);
+
+  if (idx !== -1) {
+    if (keypadWords.value[idx].state !== 1)
+      keypadWords.value[idx] = {
+        letter,
+        state,
+      };
+    return;
+  }
+
+  keypadWords.value.push({ letter, state });
 }
 
 function compareLetters() {
@@ -92,50 +97,49 @@ function compareLetters() {
 
   const word = enteredWord.join("");
 
-  //Check if any letter is in correct position
+  let correctPosIdx: number[] = [];
+  let inCorrectPosIdx: number[] = [];
+
+  // Check if any letter is in correct position
   for (let i = 0; i < 5; i++) {
-    for (let j = 0; j < 5; j++) {
-      if (wordOfTheDay[i] === word[j]) {
-        if (i === j) {
-          boardArr.value[boardRowIdx][j].state = 1;
-          a.push(j);
-          w.push(wordOfTheDay[j]);
-        }
-      }
+    if (wordOfTheDay[i] === word[i]) {
+      board.value[boardRowIdx][i].state = 1;
+      correctPosIdx.push(i);
+      handleKeypadsWords(word[i], 1);
     }
   }
 
   //Check if any letter is in incorrect position
   for (let i = 0; i < 5; i++) {
-    if (a.includes(i)) {
+    if (correctPosIdx.includes(i)) {
       continue;
     }
 
     for (let j = 0; j < 5; j++) {
+      if (correctPosIdx.includes(j) || inCorrectPosIdx.includes(j)) {
+        continue;
+      }
+
       if (wordOfTheDay[i] === word[j]) {
-        if (i !== j) {
-          if (a.includes(j) || b.includes(j)) {
-            continue;
-          } else {
-            boardArr.value[boardRowIdx][j].state = 2;
-            b.push(j);
-            break;
-          }
-        }
+        board.value[boardRowIdx][j].state = 2;
+        inCorrectPosIdx.push(j);
+        handleKeypadsWords(word[j], 2);
+        break;
       }
     }
   }
 
   //Check if any letter is not in the word
   for (let i = 0; i < 5; i++) {
-    if (a.includes(i) || b.includes(i)) {
+    if (correctPosIdx.includes(i) || inCorrectPosIdx.includes(i)) {
       continue;
     }
 
-    boardArr.value[boardRowIdx][i].state = 3;
+    board.value[boardRowIdx][i].state = 3;
+    handleKeypadsWords(word[i], 3);
   }
 
-  hasUserWon = w.join("") === wordOfTheDay;
+  hasUserWon = word === wordOfTheDay;
 
   if (hasUserWon) {
     displayResult();
@@ -151,9 +155,8 @@ function compareLetters() {
   enteredWord = [];
   boardRowIdx++;
   boardColIdx = 0;
-  a = [];
-  b = [];
-  w = [];
+  correctPosIdx = [];
+  inCorrectPosIdx = [];
 }
 
 function displayResult() {
@@ -165,14 +168,16 @@ function displayResult() {
     } else if (boardRowIdx === 1) {
       message = "IMPRESSIVE! When did you became so good at this!!!";
     } else if (boardRowIdx === 2) {
-      message = "GOOD! You are a very smart person!!!";
+      message = "GOOD! You are a smart person, I get it!!!";
     } else if (boardRowIdx === 3) {
       message = "NOT BAD! Not bad at all!!!";
     } else {
-      message = "WOW! You finally got it at the end, congrats!!!";
+      message = "WOW! You finally got it at the end, cheers!!!";
     }
   } else {
-    message = "YOU LOST! Do you even know how to play this game!!!\nWord of the Day: " + wordOfTheDay;
+    message =
+      "YOU LOST! Do you even know how to play this game!!!\nWord of the Day: " +
+      wordOfTheDay;
   }
 
   setTimeout(() => {
@@ -181,10 +186,8 @@ function displayResult() {
     enteredWord = [];
     boardRowIdx = 0;
     boardColIdx = 0;
-    a = [];
-    b = [];
-    w = [];
     hasUserWon = false;
+    keypadWords.value = [];
 
     initializeBoard();
     setWordOfTheDay();
@@ -197,94 +200,34 @@ function displayResult() {
     <div>Not enough letters!</div>
   </div>
 
-  <nav class="navbar">
-    <div class="container">
-      <div class="navbar-brand fw-bold">Woordle</div>
-
-      <a href="https://github.com/pratikpokharel3/woordle" target="_blank">
-        <svg
-          class="github_svg"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <title>github</title>
-          <path
-            d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"
-          />
-        </svg>
-      </a>
-    </div>
-  </nav>
-
   <div class="container">
+    <Appbar></Appbar>
+
     <div class="row g-0 justify-content-center">
       <div class="col-9 col-md-7 col-lg-5 col-xl-4">
-        <!-- tslint:disable-next-line -->
-        <div class="board" v-for="(row, index) in boardArr">
+        <div class="board" v-for="(row, index) in board">
           <div
             class="tile"
             :class="[
-              { entered: tile.value !== '' },
-              { correct_pos: tile.state === 1 },
-              { incorrect_pos: tile.state === 2 },
-              { not_included: tile.state === 3 },
-              {
-                tile_shake: shakeTileState && index === boardRowIdx
-              }
+              { entered: letter !== '' },
+              { correct_pos: state === 1 },
+              { incorrect_pos: state === 2 },
+              { not_included: state === 3 },
+              { tile_shake: shakeTileState && index === boardRowIdx },
             ]"
-            v-for="tile in row"
+            v-for="{ letter, state } in row"
           >
-            {{ tile.value }}
+            {{ letter }}
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-0 justify-content-center mt-5">
-      <div class="col-12 col-lg-8 col-xl-7 keyboard">
-        <div class="keypad" v-for="i in keypads[0]" @click="getLetter(i)">
-          {{ i }}
-        </div>
-      </div>
-
-      <div class="col-12 col-lg-8 col-xl-7 mt-3 keyboard">
-        <div class="keypad" v-for="i in keypads[1]" @click="getLetter(i)">
-          {{ i }}
-        </div>
-      </div>
-
-      <div class="col-12 col-lg-8 col-xl-7 mt-3 keyboard">
-        <div class="keypad" @click="getLetter('ENTER')">
-          <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            style="width: 20px; height: 20px"
-          >
-            <title>Enter</title>
-            <path
-              d="M20 4V10.5C20 14.09 17.09 17 13.5 17H7.83L10.92 20.09L9.5 21.5L4 16L9.5 10.5L10.91 11.91L7.83 15H13.5C16 15 18 13 18 10.5V4H20Z"
-            />
-          </svg>
-        </div>
-
-        <div class="keypad" v-for="i in keypads[2]" @click="getLetter(i)">
-          {{ i }}
-        </div>
-
-        <div class="keypad" @click="getLetter('CLEAR')">
-          <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            style="width: 20px; height: 20px"
-          >
-            <title>close</title>
-            <path
-              d="M5,15.59L6.41,17L10,13.41L13.59,17L15,15.59L11.41,12L15,8.41L13.59,7L10,10.59L6.41,7L5,8.41L8.59,12L5,15.59M2,3A2,2 0 0,0 0,5V19A2,2 0 0,0 2,21H17C17.69,21 18.23,20.64 18.59,20.11L24,12L18.59,3.88C18.23,3.35 17.69,3 17,3H2M2,5H17L21.72,12L17,19H2V5Z"
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
+    <Keyboard
+      :keypads="keypads"
+      :keypad-words="keypadWords"
+      @getterLetter="getLetter"
+    ></Keyboard>
   </div>
 </template>
 
@@ -309,17 +252,6 @@ body,
   font-size: 0.875rem;
   border-radius: 0.5rem;
   background-color: #000;
-}
-
-.github_svg {
-  width: 24px;
-  height: 24px;
-  fill: #586774;
-}
-
-.github_svg:hover {
-  cursor: pointer;
-  fill: #000;
 }
 
 .board {
@@ -360,56 +292,46 @@ body,
   0% {
     transform: translate(1px, 1px) rotate(0deg);
   }
+
   10% {
     transform: translate(-1px, -2px) rotate(-1deg);
   }
+
   20% {
     transform: translate(-3px, 0px) rotate(1deg);
   }
+
   30% {
     transform: translate(3px, 2px) rotate(0deg);
   }
+
   40% {
     transform: translate(1px, -1px) rotate(1deg);
   }
+
   50% {
     transform: translate(-1px, 2px) rotate(-1deg);
   }
+
   60% {
     transform: translate(-3px, 1px) rotate(0deg);
   }
+
   70% {
     transform: translate(3px, 1px) rotate(-1deg);
   }
+
   80% {
     transform: translate(-1px, -1px) rotate(1deg);
   }
+
   90% {
     transform: translate(1px, 2px) rotate(0deg);
   }
+
   100% {
     transform: translate(1px, -2px) rotate(-1deg);
   }
-}
-
-.keyboard {
-  gap: 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.keypad {
-  width: 3.5rem;
-  padding: 1rem 0;
-  font-weight: bold;
-  text-align: center;
-  font-size: 0.875rem;
-  border-radius: 0.25rem;
-  background-color: #d3d6da;
-}
-
-.keypad:hover {
-  cursor: pointer;
 }
 
 .correct_pos {
@@ -420,8 +342,8 @@ body,
 
 .incorrect_pos {
   color: white;
-  border: 2px solid orange;
-  background-color: orange;
+  border: 2px solid #c9b458;
+  background-color: #c9b458;
 }
 
 .not_included {

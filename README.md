@@ -8,7 +8,7 @@ An attempt to remake Wordle game that has taken the Internet by storm.
 
 ## Built With
 
-- [Vue.js](https://vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) + [Bootstrap](https://getbootstrap.com/) (CDN)
+- [Vue.js](https://vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Bootstrap](https://getbootstrap.com/) (CDN) + [Vite](https://vitejs.dev/)
 
 ## Recommended IDE Setup
 
